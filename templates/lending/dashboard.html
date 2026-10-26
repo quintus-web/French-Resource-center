@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Circulation Desk & Lending - French Resource Center{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header & Title -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Circulation Desk</h1>
+      <p class="text-sm text-slate-500">Issue French books, process student returns, and track overdue items.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/admin/resources/resource/add/" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
+        <i class="fa-solid fa-plus"></i>
+        <span>Add Book Title</span>
+      </a>
+      <a href="/admin/lending/borrower/add/" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Register Member</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Operational Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Active Loans -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Active Loans</p>
+        <p class="text-3xl font-black text-slate-800 mt-1">{{ total_active }}</p>
+      </div>
+      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+        <i class="fa-solid fa-book-bookmark"></i>
+      </div>
+    </div>
+
+    <!-- Overdue Items -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Overdue Items</p>
+        <p class="text-3xl font-black {% if total_overdue > 0 %}text-rose-600{% else %}text-slate-800{% endif %} mt-1">
+          {{ total_overdue }}
+        </p>
+      </div>
+      <div class="w-12 h-12 {% if total_overdue > 0 %}bg-rose-50 text-rose-600{% else %}bg-slate-100 text-slate-400{% endif %} rounded-xl flex items-center justify-center text-xl">
+        <i class="fa-solid fa-clock"></i>
+      </div>
+    </div>
+
+    <!-- Resource Status Indicator -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Service Status</p>
+        <p class="text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Operational
+        </p>
+        <p class="text-xs text-slate-400 mt-0.5">Direct Database Connection</p>
+      </div>
+      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Workspace: Fast Issue Box & Active Circulation Table -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Left Column: Fast Issue Form (4 cols) -->
+    <div class="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+      <div class="flex items-center space-x-2 pb-3 border-b border-slate-100">
+        <i class="fa-solid fa-arrow-right-arrow-left text-indigo-600"></i>
+        <h2 class="text-base font-bold text-slate-900">Issue Copy (Sortie)</h2>
+      </div>
+
+      <form action="{% url 'lending:issue' %}" method="POST" class="space-y-4">
+        {% csrf_token %}
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Accession Number (Code d'exemplaire) <span class="text-rose-500">*</span>
+          </label>
+          {{ issue_form.accession_number }}
+          <p class="text-[11px] text-slate-400 mt-1">E.g., scan barcode or type FR-A2-001</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Borrower ID (Admission / Staff No.) <span class="text-rose-500">*</span>
+          </label>
+          {{ issue_form.borrower_identifier }}
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Duration (Days)
+          </label>
+          {{ issue_form.loan_duration_days }}
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-sm transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-check"></i>
+          <span>Confirm Checkout</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Column: Active Loans & Return Management (8 cols) -->
+    <div class="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Current Active Loans</h2>
+          <p class="text-xs text-slate-500">Books currently in circulation with students and teachers.</p>
+        </div>
+
+        <!-- Filter / Quick Search -->
+        <input type="text" id="loanSearch" placeholder="Filter loans in table..." 
+               class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-56"
+               onkeyup="filterTable()">
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="loansTable">
+          <thead>
+            <tr class="bg-slate-50/75 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th class="py-3 px-4">Accession</th>
+              <th class="py-3 px-4">Title & Level</th>
+              <th class="py-3 px-4">Borrower</th>
+              <th class="py-3 px-4">Due Date</th>
+              <th class="py-3 px-4 text-center">Status</th>
+              <th class="py-3 px-4 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-xs">
+            {% for loan in active_loans %}
+            <tr class="hover:bg-slate-50/80 transition {% if loan.is_overdue %}bg-rose-50/40{% endif %}">
+              <td class="py-3 px-4 font-mono font-semibold text-slate-700">
+                {{ loan.copy.accession_number }}
+              </td>
+              <td class="py-3 px-4">
+                <div class="font-medium text-slate-900">{{ loan.copy.resource.title }}</div>
+                <span class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 mt-0.5">
+                  {{ loan.copy.resource.get_level_display }}
+                </span>
+              </td>
+              <td class="py-3 px-4">
+                <div class="font-medium text-slate-800">{{ loan.borrower.first_name }} {{ loan.borrower.last_name }}</div>
+                <div class="text-[11px] text-slate-400 font-mono">{{ loan.borrower.identifier }} {% if loan.borrower.class_form %}&bull; {{ loan.borrower.class_form }}{% endif %}</div>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <div class="font-medium {% if loan.is_overdue %}text-rose-600 font-bold{% else %}text-slate-700{% endif %}">
+                  {{ loan.due_date|date:"d M Y" }}
+                </div>
+                <div class="text-[10px] text-slate-400">Issued: {{ loan.issued_at|date:"d M" }}</div>
+              </td>
+              <td class="py-3 px-4 text-center whitespace-nowrap">
+                {% if loan.is_overdue %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                    Overdue by {{ loan.days_overdue }}d
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    On Time
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-4 text-right whitespace-nowrap">
+                <form action="{% url 'lending:return' loan.id %}" method="POST" onsubmit="return confirm('Confirm book return for copy {{ loan.copy.accession_number }}?')">
+                  {% csrf_token %}
+                  <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1.5 rounded-md text-[11px] shadow-sm transition inline-flex items-center space-x-1">
+                    <i class="fa-solid fa-arrow-down-left"></i>
+                    <span>Return</span>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                <i class="fa-solid fa-box-open text-2xl mb-2 text-slate-300 block"></i>
+                No active loans found. All copies are currently accounted for in the resource center!
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent Returns History -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+      <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
+      Recent Returns Archive (Last 10)
+    </h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase">
+            <th class="py-2 px-3">Accession</th>
+            <th class="py-2 px-3">Title</th>
+            <th class="py-2 px-3">Returned By</th>
+            <th class="py-2 px-3">Returned Date</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-600">
+          {% for ret in recent_returns %}
+          <tr>
+            <td class="py-2 px-3 font-mono text-slate-700">{{ ret.copy.accession_number }}</td>
+            <td class="py-2 px-3">{{ ret.copy.resource.title }}</td>
+            <td class="py-2 px-3">{{ ret.borrower.first_name }} {{ ret.borrower.last_name }} ({{ ret.borrower.identifier }})</td>
+            <td class="py-2 px-3 text-slate-500">{{ ret.returned_at|date:"d M Y, H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="py-3 text-center text-slate-400">No recent returns recorded yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick In-Table Search JavaScript -->
+<script>
+  function filterTable() {
+    const input = document.getElementById("loanSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#loansTable tbody tr");
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(input) ? "" : "none";
+    });
+  }
+</script>
+{% endblock %}

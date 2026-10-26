@@ -61,13 +61,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'french_hub.wsgi.application'
 
 # Database configuration (Neon Postgres or local SQLite fallback)
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-        conn_max_age=600,
-        ssl_require=False if 'sqlite' in os.getenv('DATABASE_URL', '') else True
-    )
-}
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL and not DATABASE_URL.startswith('sqlite'):
+    # Cloud PostgreSQL / Neon (Render production)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    # Local SQLite development (100% offline, zero config)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

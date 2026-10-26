@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}French Club & DELF Study Hub{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header Section -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Le Club de Français & DELF Center</h1>
+      <p class="text-sm text-slate-500">Manage club events, record meeting attendance, and access curated DELF exam materials.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'lending:dashboard' %}" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
+        <i class="fa-solid fa-book-bookmark"></i>
+        <span>Circulation Desk</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Operational Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Scheduled Events</p>
+        <p class="text-3xl font-black text-slate-800 mt-1">{{ total_events }}</p>
+      </div>
+      <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+        <i class="fa-regular fa-calendar-check"></i>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">DELF Resources Linked</p>
+        <p class="text-3xl font-black text-indigo-600 mt-1">{{ total_links }}</p>
+      </div>
+      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Left Column: Add Event & Add Study Link (4 cols) -->
+    <div class="lg:col-span-4 space-y-6">
+
+      <!-- Schedule Event Form -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex items-center space-x-2 pb-2 border-b border-slate-100">
+          <i class="fa-solid fa-calendar-plus text-amber-600"></i>
+          <h2 class="text-sm font-bold text-slate-900">Plan Club Event</h2>
+        </div>
+        <form action="{% url 'club:create_event' %}" method="POST" class="space-y-3">
+          {% csrf_token %}
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Title</label>
+            {{ event_form.title }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Type</label>
+            {{ event_form.event_type }}
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Date</label>
+              {{ event_form.date }}
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Time</label>
+              {{ event_form.start_time }}
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Venue</label>
+            {{ event_form.location }}
+          </div>
+          <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-lg text-xs shadow-sm transition">
+            Save Event
+          </button>
+        </form>
+      </div>
+
+      <!-- Add DELF Link Form -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex items-center space-x-2 pb-2 border-b border-slate-100">
+          <i class="fa-solid fa-link text-indigo-600"></i>
+          <h2 class="text-sm font-bold text-slate-900">Add DELF Exercise Link</h2>
+        </div>
+        <form action="{% url 'club:add_delf' %}" method="POST" class="space-y-3">
+          {% csrf_token %}
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Title</label>
+            {{ resource_form.title }}
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">CEFR Level</label>
+              {{ resource_form.level }}
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Competency</label>
+              {{ resource_form.skill }}
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Resource URL</label>
+            {{ resource_form.url }}
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-3 rounded-lg text-xs shadow-sm transition">
+            Add Study Link
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Events List & DELF Links Table (8 cols) -->
+    <div class="lg:col-span-8 space-y-6">
+
+      <!-- Events & Attendance Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+          <h2 class="text-sm font-bold text-slate-900">Club Activities & Attendance Roster</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-[10px]">
+                <th class="py-2.5 px-3">Date</th>
+                <th class="py-2.5 px-3">Activity</th>
+                <th class="py-2.5 px-3">Type</th>
+                <th class="py-2.5 px-3 text-center">Turnout</th>
+                <th class="py-2.5 px-3 text-right">Roll Call</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for ev in events %}
+              <tr class="hover:bg-slate-50">
+                <td class="py-2.5 px-3 whitespace-nowrap font-medium text-slate-700">{{ ev.date|date:"d M Y" }}</td>
+                <td class="py-2.5 px-3 font-semibold text-slate-900">{{ ev.title }}</td>
+                <td class="py-2.5 px-3 text-slate-500">{{ ev.get_event_type_display }}</td>
+                <td class="py-2.5 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {{ ev.attendee_count }} present
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 text-right">
+                  <a href="{% url 'club:event_attendance' ev.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded text-[11px] inline-flex items-center space-x-1">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span>Mark</span>
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="py-6 text-center text-slate-400">No club events scheduled yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DELF Study Center Cards -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-indigo-600"></i>
+          Curated DELF Exam Resources
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {% for link in study_links %}
+          <div class="border border-slate-200 rounded-lg p-3 hover:border-indigo-300 hover:shadow-xs transition">
+            <div class="flex items-center justify-between mb-1">
+              <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-indigo-100 text-indigo-800">{{ link.level }}</span>
+              <span class="text-[10px] text-slate-500 font-medium">{{ link.get_skill_display }}</span>
+            </div>
+            <h3 class="text-xs font-bold text-slate-800 line-clamp-1">{{ link.title }}</h3>
+            {% if link.description %}<p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{{ link.description }}</p>{% endif %}
+            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+              <span>Open Exercise</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+          {% empty %}
+          <p class="text-xs text-slate-400 col-span-2 text-center py-4">No DELF exercises linked yet. Add one using the form on the left.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
