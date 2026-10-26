@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}French Club Media & Resources{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  <div class="pb-3 border-b border-slate-200">
+    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Galerie &amp; Ressources Multimédia</h1>
+    <p class="text-sm text-slate-500">French Club audio podcasts, event photo albums, and official study documents.</p>
+  </div>
+
+  <!-- Podcast Stream -->
+  <section class="space-y-4">
+    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+      <i class="fa-solid fa-podcast text-indigo-600"></i>
+      Club Podcasts &amp; Audio Comprehension
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for pod in podcasts %}
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase text-indigo-600 tracking-wider">Épisode {{ pod.episode_number }} &bull; {{ pod.duration_minutes }} min</span>
+          <h3 class="text-base font-bold text-slate-800 mt-1">{{ pod.title }}</h3>
+          <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ pod.description }}</p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100">
+          {% if pod.audio_file %}
+            <audio controls class="w-full h-8">
+              <source src="{{ pod.audio_file.url }}" type="audio/mpeg">
+              Your browser does not support audio playback.
+            </audio>
+          {% elif pod.external_url %}
+            <a href="{{ pod.external_url }}" target="_blank" class="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+              <i class="fa-solid fa-headphones mr-1.5"></i> Stream on Spotify / Web
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-xs text-slate-400 col-span-2">No podcasts published yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Event Photos -->
+<!-- Event Photos -->
+  <section class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-camera-retro text-amber-600"></i>
+        Photos des Événements
+      </h2>
+      <span class="text-xs text-slate-400">Click any photo to browse with arrow keys</span>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      {% for pic in photos %}
+      <div onclick="openLightbox({{ forloop.counter0 }})" 
+           class="group relative rounded-lg overflow-hidden bg-slate-100 border border-slate-200 aspect-video cursor-pointer hover:shadow-md transition">
+        <img src="{{ pic.image.url }}" alt="{{ pic.caption }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition p-2.5 flex flex-col justify-end text-white">
+          <p class="text-[11px] font-semibold leading-tight line-clamp-1">{{ pic.caption }}</p>
+          {% if pic.event %}<span class="text-[9px] text-indigo-200 mt-0.5">{{ pic.event.title }}</span>{% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-xs text-slate-400 col-span-4 py-4 text-center">No event photos uploaded yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Document Downloads -->
+  <section class="space-y-4">
+    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+      <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
+      Documents &amp; Past Papers
+    </h2>
+    <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm overflow-hidden">
+      {% for doc in documents %}
+      <div class="p-3.5 flex items-center justify-between text-xs hover:bg-slate-50">
+        <div class="flex items-center space-x-3">
+          <i class="fa-regular fa-file-pdf text-rose-500 text-base"></i>
+          <div>
+            <span class="font-bold text-slate-800">{{ doc.title }}</span>
+            <span class="ml-2 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">{{ doc.get_category_display }}</span>
+            {% if doc.description %}<p class="text-[11px] text-slate-400 mt-0.5">{{ doc.description }}</p>{% endif %}
+          </div>
+        </div>
+        <a href="{{ doc.file.url }}" download class="bg-slate-100 hover:bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded text-xs transition inline-flex items-center space-x-1">
+          <i class="fa-solid fa-download"></i>
+          <span>Download</span>
+        </a>
+      </div>
+      {% empty %}
+      <p class="text-xs text-slate-400 p-4 text-center">No documents uploaded yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<!-- Modal Lightbox with Navigation Arrows -->
+<div id="imageLightbox" 
+     onclick="closeLightbox(event)" 
+     class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xs hidden items-center justify-center p-4">
+  
+  <!-- Close Button -->
+  <button type="button" 
+          onclick="forceCloseLightbox()" 
+          class="absolute top-4 right-4 text-white/70 hover:text-white text-2xl p-2 z-20 transition">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+
+  <!-- Previous Image Button -->
+  <button type="button" 
+          onclick="prevImage(event)" 
+          class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 text-white/75 hover:text-white bg-black/40 hover:bg-black/70 p-3 rounded-full text-lg z-20 transition">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+
+  <!-- Main Image & Details Container -->
+  <div

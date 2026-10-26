@@ -1,13 +1,17 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from lending.models import Borrower
 from .forms import ClubEventForm, DELFResourceForm
-from .models import Attendance, ClubEvent, DELFStudyResource
+from .models import (
+    Attendance,
+    ClubDocument,
+    ClubEvent,
+    DELFStudyResource,
+    EventPhoto,
+    PodcastEpisode,
+)
 
 
 @login_required
@@ -61,7 +65,6 @@ def event_attendance(request, event_id):
         messages.success(request, f"Attendance roll call updated for '{event.title}'.")
         return redirect('club:event_attendance', event_id=event.id)
 
-    # Build attendance status list
     member_rows = []
     for member in all_members:
         att = existing_attendance.get(member.id)
@@ -88,3 +91,16 @@ def add_delf_resource(request):
             res = form.save()
             messages.success(request, f"DELF link '{res.title}' added to study center.")
     return redirect('club:dashboard')
+
+
+def public_media_hub(request):
+    photos = EventPhoto.objects.select_related('event')[:12]
+    documents = ClubDocument.objects.all().order_by('category', '-uploaded_at')
+    podcasts = PodcastEpisode.objects.all()
+
+    context = {
+        'photos': photos,
+        'documents': documents,
+        'podcasts': podcasts,
+    }
+    return render(request, 'club/media_hub.html', context)

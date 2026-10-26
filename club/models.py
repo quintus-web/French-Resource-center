@@ -1,6 +1,9 @@
+from django.db import models
+
 # Create your models here.
 from django.db import models
 from django.utils import timezone
+from django.core.validators import FileExtensionValidator
 from lending.models import Borrower
 
 
@@ -82,3 +85,62 @@ class DELFStudyResource(models.Model):
 
     def __str__(self):
         return f"[{self.level} - {self.skill}] {self.title}"
+
+
+class EventPhoto(models.Model):
+    event = models.ForeignKey(ClubEvent, on_delete=models.CASCADE, related_name='photos', null=True, blank=True)
+    caption = models.CharField(max_length=200, help_text="e.g. Concours d'Éloquence winners 2026")
+    image = models.ImageField(upload_to='events/%Y/%m/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return self.caption
+
+
+class ClubDocument(models.Model):
+    DOC_TYPES = [
+        ('DELF', 'Past DELF Exam Papers'),
+        ('SYLLABUS', 'Curriculum & Syllabi'),
+        ('GAZETTE', 'Club Journal / Newsletter'),
+        ('MINUTES', 'Meeting Minutes & Constitution'),
+    ]
+
+    title = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=DOC_TYPES, default='DELF')
+    description = models.CharField(max_length=255, blank=True)
+    file = models.FileField(
+        upload_to='documents/%Y/',
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'docx', 'epub', 'xlsx'])]
+    )
+    uploaded_at = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.get_category_display()}] {self.title}"
+
+
+class PodcastEpisode(models.Model):
+    title = models.CharField(max_length=200)
+    episode_number = models.PositiveIntegerField(default=1)
+    description = models.TextField(help_text="Vocabulary breakdown, host notes, or transcript excerpts")
+    audio_file = models.FileField(
+        upload_to='podcasts/%Y/',
+        validators=[FileExtensionValidator(allowed_extensions=['mp3', 'wav', 'm4a', 'aac'])],
+        blank=True,
+        null=True,
+        help_text="Upload raw audio file (.mp3)"
+    )
+    external_url = models.URLField(
+        blank=True,
+        help_text="Optional Spotify, YouTube, or Apple Podcasts link"
+    )
+    duration_minutes = models.PositiveIntegerField(default=10, help_text="Estimated duration in minutes")
+    published_date = models.DateField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-published_date', '-episode_number']
+
+    def __str__(self):
+        return f"Ep. {self.episode_number}: {self.title}"

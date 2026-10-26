@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.shortcuts import redirect
@@ -25,3 +27,6 @@ urlpatterns = [
     path('club/', include('club.urls')),
     path('', lambda request: redirect('admin/')),  # Redirects root URL directly to admin portal for now
 ]
+# Serve media files in local development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
