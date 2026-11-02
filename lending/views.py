@@ -91,3 +91,106 @@ def return_copy(request, loan_id):
 
         messages.success(request, f"Copy '{copy.accession_number}' returned and restored to available inventory.")
     return redirect('lending:dashboard')
+
+import csv
+import io
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.shortcuts import redirect, render
+
+from lending.models import Borrower
+from resources.models import Resource, BookCopy  # adjust model names if titled BookCopy
+
+
+@login_required
+def bulk_import(request):
+    if request.method == 'POST':
+        import_type = request.POST.get('import_type')
+        csv_file = request.FILES.get('csv_file')
+
+        if not csv_file or not csv_file.name.endswith('.csv'):
+            messages.error(request, "Please upload a valid .csv file.")
+            return redirect('lending:bulk_import')
+
+        try:
+            decoded_file = io.TextIOWrapper(csv_file.file, encoding='utf-8-sig')
+            reader = csv.DictReader(decoded_file)
+            created_count = 0
+            skipped_count = 0
+
+            with transaction.atomic():
+                if import_type == 'members':
+                    for row in reader:
+                        identifier = row.get('identifier', '').strip()
+                        first_name = row.get('first_name', '').strip()
+                        last_name = row.get('last_name', '').strip()
+                        class_form = row.get('class_form', '').strip()
+                        borrower_type = row.get('borrower_type', 'Student').strip()
+
+                        if not identifier or not first_name or not last_name:
+                            skipped_count += 1
+                            continue
+
+                        _, created = Borrower.objects.get_or_create(
+                            identifier=identifier,
+                            defaults={
+                                'first_name': first_name,
+                                'last_name': last_name,
+                                'class_form': class_form,
+                                'borrower_type': borrower_type,
+                                'is_active': True,
+                            }
+                        )
+                        if created:
+                            created_count += 1
+                        else:
+                            skipped_count += 1
+
+                    messages.success(request, f"Imported {created_count} members ({skipped_count} skipped or already existed).")
+
+                elif import_type == 'books':
+                    for row in reader:
+                        title = row.get('title', '').strip()
+                        author = row.get('author', '').strip()
+                        level = row.get('level', 'A1').strip().upper()
+                        category = row.get('category', 'Roman / Fiction').strip()
+                        accession_number = row.get('accession_number', '').strip()
+                        shelf_location = row.get('shelf_location', 'General Shelf').strip()
+
+                        if not title or not accession_number:
+                            skipped_count += 1
+                            continue
+
+                        # Ensure parent resource exists
+                        resource, _ = Resource.objects.get_or_create(
+                            title=title,
+                            author=author,
+                            defaults={
+                                'level': level,
+                                'category': category,
+                            }
+                        )
+
+                        # Create copy if accession number does not exist
+                        _, copy_created = BookCopy.objects.get_or_create(
+                            accession_number=accession_number,
+                            defaults={
+                                'resource': resource,
+                                'shelf_location': shelf_location,
+                                'status': 'AVAILABLE',
+                            }
+                        )
+                        if copy_created:
+                            created_count += 1
+                        else:
+                            skipped_count += 1
+
+                    messages.success(request, f"Imported {created_count} book copies ({skipped_count} skipped or duplicate accession numbers).")
+
+        except Exception as e:
+            messages.error(request, f"Import error: {str(e)}")
+
+        return redirect('lending:bulk_import')
+
+    return render(request, 'lending/bulk_import.html')

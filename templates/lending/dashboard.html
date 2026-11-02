@@ -11,7 +11,11 @@
       <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Circulation Desk</h1>
       <p class="text-sm text-slate-500">Issue French books, process student returns, and track overdue items.</p>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 flex-wrap">
+      <a href="{% url 'lending:bulk_import' %}" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition shadow-xs">
+        <i class="fa-solid fa-file-csv text-emerald-600"></i>
+        <span>Bulk CSV Import</span>
+      </a>
       <a href="/admin/resources/resource/add/" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
         <i class="fa-solid fa-plus"></i>
         <span>Add Book Title</span>
