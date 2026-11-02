@@ -21,6 +21,7 @@ from django.urls import include, path
 from django.shortcuts import redirect
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='/lending/dashboard/', permanent=False)),
     path('admin/', admin.site.urls),
     path('admin/', admin.site.urls),
     path('lending/', include('lending.urls')),

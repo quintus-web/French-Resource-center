@@ -110,8 +110,9 @@ if STATIC_DIR.exists():
     STATICFILES_DIRS = [STATIC_DIR]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+# Redirect users straight to the circulation desk after logging in
+LOGIN_REDIRECT_URL = '/lending/dashboard/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Uploaded User & CMS Media
 MEDIA_URL = '/media/'
