@@ -113,6 +113,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Redirect users straight to the circulation desk after logging in
 LOGIN_REDIRECT_URL = '/lending/dashboard/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_URL = '/accounts/login/'
 
 # Uploaded User & CMS Media
 MEDIA_URL = '/media/'

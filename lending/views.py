@@ -11,18 +11,16 @@ from django.utils import timezone
 from resources.models import BookCopy
 from .forms import BorrowerForm, IssueBookForm
 from .models import Borrower, Loan
+from django.contrib.auth.decorators import login_required
 
 
 @login_required
 def circulation_dashboard(request):
     active_loans = Loan.objects.filter(returned_at__isnull=True).select_related('copy__resource', 'borrower')
     recent_returns = Loan.objects.filter(returned_at__isnull=False).select_related('copy__resource', 'borrower')[:10]
-    
     overdue_count = sum(1 for loan in active_loans if loan.is_overdue)
-    
     issue_form = IssueBookForm()
     borrower_form = BorrowerForm()
-
     context = {
         'active_loans': active_loans,
         'recent_returns': recent_returns,
@@ -32,6 +30,43 @@ def circulation_dashboard(request):
         'borrower_form': borrower_form,
     }
     return render(request, 'lending/dashboard.html', context)
+
+
+@login_required
+def members_list(request):
+    q = request.GET.get('q', '').strip()
+    members = Borrower.objects.all()
+    if q:
+        members = members.filter(
+            first_name__icontains=q
+        ) | members.filter(
+            last_name__icontains=q
+        ) | members.filter(
+            identifier__icontains=q
+        )
+    members = members.order_by('last_name', 'first_name')
+    borrower_form = BorrowerForm()
+    return render(request, 'lending/members.html', {
+        'members': members,
+        'borrower_form': borrower_form,
+        'q': q,
+        'total': Borrower.objects.count(),
+    })
+
+
+@login_required
+def register_borrower(request):
+    if request.method == 'POST':
+        form = BorrowerForm(request.POST)
+        if form.is_valid():
+            b = form.save()
+            messages.success(request, f"Member '{b.first_name} {b.last_name}' registered with ID {b.identifier}.")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    next_url = request.POST.get('next', 'lending:members')
+    return redirect(next_url)
 
 
 @login_required

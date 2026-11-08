@@ -1,20 +1,88 @@
 {% extends 'base.html' %}
 
-{% block title %}French Club Media &amp; Resources{% endblock %}
+{% block title %}French Club Media & Resources{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
-  <div class="pb-3 border-b border-slate-200">
-    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Galerie &amp; Ressources Multimédia</h1>
-    <p class="text-sm text-slate-500">French Club audio podcasts, event photo albums, and official study documents.</p>
+  <!-- Top Header with Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-200">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Galerie &amp; Ressources Multimédia</h1>
+      <p class="text-sm text-slate-500">French Club audio podcasts, event photo albums, and official study documents.</p>
+    </div>
+    
+    <!-- Action Button Group -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <a href="{% url 'lending:dashboard' %}" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition-colors">
+        <i class="fa-solid fa-arrow-left text-slate-400" aria-hidden="true"></i>
+        <span>Circulation Desk</span>
+      </a>
+      <a href="/admin/club/eventphoto/add/" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm transition-colors">
+        <i class="fa-solid fa-camera" aria-hidden="true"></i>
+        <span>Add Photo</span>
+      </a>
+      <a href="/admin/club/podcast/add/" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-sm transition-colors">
+        <i class="fa-solid fa-podcast" aria-hidden="true"></i>
+        <span>Add Podcast</span>
+      </a>
+      <a href="/admin/club/clubdocument/add/" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition-colors">
+        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+        <span>Upload Document</span>
+      </a>
+    </div>
   </div>
 
+  <!-- Event Photos Section -->
+  <section class="space-y-4" aria-labelledby="photos-heading">
+    <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+      <div>
+        <h2 id="photos-heading" class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-camera-retro text-amber-600" aria-hidden="true"></i>
+          Photos des Événements
+        </h2>
+        <span class="text-xs text-slate-400">Click any photo to browse full-screen</span>
+      </div>
+      <a href="/admin/club/eventphoto/add/" class="text-xs font-semibold text-amber-700 hover:text-amber-900 inline-flex items-center gap-1">
+        <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i> Upload New Photo
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      {% for pic in photos %}
+      <div role="button" tabindex="0"
+           data-index="{{ forloop.counter0 }}"
+           aria-label="View photo: {{ pic.caption|escapejs }}"
+           class="photo-card group relative rounded-lg overflow-hidden bg-slate-100 border border-slate-200 aspect-video cursor-pointer hover:shadow-md transition-shadow">
+        <img src="{{ pic.image.url }}" alt="{{ pic.caption }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2.5 flex flex-col justify-end text-white">
+          <p class="text-[11px] font-semibold leading-tight line-clamp-1">{{ pic.caption }}</p>
+          {% if pic.event %}<span class="text-[10px] text-indigo-200 mt-0.5">{{ pic.event.title }}</span>{% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+        <i class="fa-regular fa-image text-3xl text-slate-300 mb-2 block" aria-hidden="true"></i>
+        <p class="text-xs text-slate-500">No event photos uploaded yet.</p>
+        <a href="/admin/club/eventphoto/add/" class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:underline">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Add the first photo
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
   <!-- Podcast Stream -->
-  <section class="space-y-4">
-    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-      <i class="fa-solid fa-podcast text-indigo-600"></i>
-      Club Podcasts &amp; Audio Comprehension
-    </h2>
+  <section class="space-y-4" aria-labelledby="podcasts-heading">
+    <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+      <h2 id="podcasts-heading" class="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-podcast text-indigo-600" aria-hidden="true"></i>
+        Club Podcasts &amp; Audio Comprehension
+      </h2>
+      <a href="/admin/club/podcast/add/" class="text-xs font-semibold text-indigo-700 hover:text-indigo-900 inline-flex items-center gap-1">
+        <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i> Add Episode
+      </a>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for pod in podcasts %}
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
@@ -25,104 +93,86 @@
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100">
           {% if pod.audio_file %}
-            <audio controls class="w-full h-8">
-              <source src="{{ pod.audio_file.url }}" type="audio/mpeg">
+            <audio controls class="w-full" aria-label="{{ pod.title }}">
+              <source src="{{ pod.audio_file.url }}" type="audio/mpeg" />
               Your browser does not support audio playback.
             </audio>
           {% elif pod.external_url %}
             <a href="{{ pod.external_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-              <i class="fa-solid fa-headphones mr-1.5"></i> Stream on Spotify / Web
+              <i class="fa-solid fa-headphones mr-1.5" aria-hidden="true"></i> Stream on Spotify / Web
             </a>
           {% endif %}
         </div>
       </div>
       {% empty %}
-      <p class="text-xs text-slate-400 col-span-2">No podcasts published yet.</p>
-      {% endfor %}
-    </div>
-  </section>
-
-  <!-- Event Photos -->
-  <section class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-        <i class="fa-solid fa-camera-retro text-amber-600"></i>
-        Photos des Événements
-      </h2>
-      <span class="text-xs text-slate-400">Click any photo to browse with arrow keys</span>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      {% for pic in photos %}
-      <div onclick="openLightbox({{ forloop.counter0 }})" 
-           class="group relative rounded-lg overflow-hidden bg-slate-100 border border-slate-200 aspect-video cursor-pointer hover:shadow-md transition">
-        <img src="{{ pic.image.url }}" alt="{{ pic.caption }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition p-2.5 flex flex-col justify-end text-white">
-          <p class="text-[11px] font-semibold leading-tight line-clamp-1">{{ pic.caption }}</p>
-          {% if pic.event %}<span class="text-[9px] text-indigo-200 mt-0.5">{{ pic.event.title }}</span>{% endif %}
-        </div>
+      <div class="col-span-full py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+        <i class="fa-solid fa-headphones text-3xl text-slate-300 mb-2 block" aria-hidden="true"></i>
+        <p class="text-xs text-slate-500">No podcasts published yet.</p>
+        <a href="/admin/club/podcast/add/" class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 hover:underline">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Add the first podcast episode
+        </a>
       </div>
-      {% empty %}
-      <p class="text-xs text-slate-400 col-span-4 py-4 text-center">No event photos uploaded yet.</p>
       {% endfor %}
     </div>
   </section>
 
   <!-- Document Downloads -->
-  <section class="space-y-4">
-    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-      <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
-      Documents &amp; Past Papers
-    </h2>
+  <section class="space-y-4" aria-labelledby="docs-heading">
+    <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+      <h2 id="docs-heading" class="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-file-arrow-down text-emerald-600" aria-hidden="true"></i>
+        Documents &amp; Past Papers
+      </h2>
+      <a href="/admin/club/clubdocument/add/" class="text-xs font-semibold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1">
+        <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i> Upload Document
+      </a>
+    </div>
+
     <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm overflow-hidden">
       {% for doc in documents %}
       <div class="p-3.5 flex items-center justify-between text-xs hover:bg-slate-50">
         <div class="flex items-center space-x-3">
-          <i class="fa-regular fa-file-pdf text-rose-500 text-base"></i>
+          <i class="fa-regular fa-file-pdf text-rose-500 text-base" aria-hidden="true"></i>
           <div>
             <span class="font-bold text-slate-800">{{ doc.title }}</span>
             <span class="ml-2 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">{{ doc.get_category_display }}</span>
             {% if doc.description %}<p class="text-[11px] text-slate-400 mt-0.5">{{ doc.description }}</p>{% endif %}
           </div>
         </div>
-        <a href="{{ doc.file.url }}" download class="bg-slate-100 hover:bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded text-xs transition inline-flex items-center space-x-1">
-          <i class="fa-solid fa-download"></i>
+        <a href="{{ doc.file.url }}" download class="bg-slate-100 hover:bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded text-xs transition-colors inline-flex items-center gap-1.5" aria-label="Download {{ doc.title }}">
+          <i class="fa-solid fa-download" aria-hidden="true"></i>
           <span>Download</span>
         </a>
       </div>
       {% empty %}
-      <p class="text-xs text-slate-400 p-4 text-center">No documents uploaded yet.</p>
+      <div class="py-8 text-center bg-slate-50">
+        <i class="fa-regular fa-folder-open text-3xl text-slate-300 mb-2 block" aria-hidden="true"></i>
+        <p class="text-xs text-slate-500">No documents or past papers uploaded yet.</p>
+        <a href="/admin/club/clubdocument/add/" class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Upload a past paper or guide
+        </a>
+      </div>
       {% endfor %}
     </div>
   </section>
 </div>
 
 <!-- Modal Lightbox with Navigation Arrows -->
-<div id="imageLightbox" 
-     onclick="closeLightbox(event)" 
-     class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xs hidden items-center justify-center p-4">
-  
-  <!-- Close Button -->
-  <button type="button" 
-          onclick="forceCloseLightbox()" 
-          class="absolute top-4 right-4 text-white/70 hover:text-white text-2xl p-2 z-20 transition">
-    <i class="fa-solid fa-xmark"></i>
+<div id="imageLightbox"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Photo lightbox"
+     onclick="closeLightbox(event)"
+     class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm items-center justify-center p-4"
+     style="display:none">
+  <button type="button" onclick="forceCloseLightbox()" aria-label="Close lightbox" class="absolute top-4 right-4 text-white/70 hover:text-white text-2xl p-2 z-20 transition-colors">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
   </button>
-
-  <!-- Previous Image Button -->
-  <button type="button" 
-          onclick="prevImage(event)" 
-          class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 text-white/75 hover:text-white bg-black/40 hover:bg-black/70 p-3 rounded-full text-lg z-20 transition">
-    <i class="fa-solid fa-chevron-left"></i>
+  <button type="button" onclick="prevImage(event)" aria-label="Previous image" class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 text-white/75 hover:text-white bg-black/40 hover:bg-black/70 p-3 rounded-full text-lg z-20 transition-colors">
+    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
   </button>
-
-  <!-- Main Image & Details Container -->
   <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center select-none" onclick="event.stopPropagation()">
-    <img id="lightboxImg" 
-         src="" 
-         alt="" 
-         class="max-w-full max-h-[75vh] rounded-lg shadow-2xl object-contain border border-white/10">
-    
+    <img id="lightboxImg" src="#" alt="" class="max-w-full max-h-[75vh] rounded-lg shadow-2xl object-contain border border-white/10" aria-live="polite">
     <div class="mt-3 text-center px-4">
       <div class="flex items-center justify-center gap-2">
         <p id="lightboxCaption" class="text-sm font-semibold text-white"></p>
@@ -131,26 +181,16 @@
       <p id="lightboxSub" class="text-xs text-indigo-300 mt-1"></p>
     </div>
   </div>
-
-  <!-- Next Image Button -->
-  <button type="button" 
-          onclick="nextImage(event)" 
-          class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 text-white/75 hover:text-white bg-black/40 hover:bg-black/70 p-3 rounded-full text-lg z-20 transition">
-    <i class="fa-solid fa-chevron-right"></i>
+  <button type="button" onclick="nextImage(event)" aria-label="Next image" class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 text-white/75 hover:text-white bg-black/40 hover:bg-black/70 p-3 rounded-full text-lg z-20 transition-colors">
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
   </button>
 </div>
 
+<script type="application/json" id="gallery-data">[{% for pic in photos %}{"url":"{{ pic.image.url|escapejs }}","caption":"{{ pic.caption|escapejs }}","event":"{% if pic.event %}{{ pic.event.title|escapejs }}{% endif %}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+
 <!-- Lightbox Carousel Script -->
 <script>
-  const galleryImages = [
-    {% for pic in photos %}
-    {
-      url: "{{ pic.image.url }}",
-      caption: "{{ pic.caption|escapejs }}",
-      event: "{% if pic.event %}{{ pic.event.title|escapejs }}{% endif %}"
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ];
+  const galleryImages = JSON.parse(document.getElementById('gallery-data').textContent);
 
   let currentIndex = 0;
   const lightbox = document.getElementById('imageLightbox');
@@ -165,22 +205,20 @@
     lightboxImg.src = item.url;
     lightboxImg.alt = item.caption;
     lightboxCaption.textContent = item.caption;
-    lightboxSub.textContent = item.event ? `Événement: ${item.event}` : '';
-    lightboxCounter.textContent = `${currentIndex + 1} / ${galleryImages.length}`;
+    lightboxSub.textContent = item.event ? 'Événement : ' + item.event : '';
+    lightboxCounter.textContent = (currentIndex + 1) + ' / ' + galleryImages.length;
   }
 
   function openLightbox(index) {
     currentIndex = index;
     updateLightbox();
-    lightbox.classList.remove('hidden');
-    lightbox.classList.add('flex');
+    lightbox.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
 
   function forceCloseLightbox() {
-    lightbox.classList.add('hidden');
-    lightbox.classList.remove('flex');
-    lightboxImg.src = '';
+    lightbox.style.display = 'none';
+    lightboxImg.src = '#';
     document.body.style.overflow = '';
   }
 
@@ -198,22 +236,24 @@
     updateLightbox();
   }
 
+  document.querySelectorAll('.photo-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      openLightbox(parseInt(this.dataset.index));
+    });
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') openLightbox(parseInt(this.dataset.index));
+    });
+  });
+
   function closeLightbox(e) {
-    if (e.target === lightbox) {
-      forceCloseLightbox();
-    }
+    if (e.target === lightbox) forceCloseLightbox();
   }
 
   document.addEventListener('keydown', (e) => {
-    if (lightbox.classList.contains('hidden')) return;
-
-    if (e.key === 'ArrowRight') {
-      nextImage();
-    } else if (e.key === 'ArrowLeft') {
-      prevImage();
-    } else if (e.key === 'Escape') {
-      forceCloseLightbox();
-    }
+    if (lightbox.style.display === 'none' || !lightbox.style.display) return;
+    if (e.key === 'ArrowRight') nextImage();
+    else if (e.key === 'ArrowLeft') prevImage();
+    else if (e.key === 'Escape') forceCloseLightbox();
   });
 </script>
 {% endblock %}

@@ -89,14 +89,40 @@ def add_delf_resource(request):
         form = DELFResourceForm(request.POST)
         if form.is_valid():
             res = form.save()
-            messages.success(request, f"DELF link '{res.title}' added to study center.")
-    return redirect('club:dashboard')
+            messages.success(request, f"DELF link '{res.title}' added.")
+        next_url = request.POST.get('next', 'club:dashboard')
+        return redirect(next_url)
+    return redirect('club:delf_resources')
 
 
-def public_media_hub(request):
-    photos = EventPhoto.objects.select_related('event')[:12]
+def delf_resources(request):
+    from .models import DELFStudyResource
+    level_choices = DELFStudyResource.LEVEL_CHOICES
+    selected_level = request.GET.get('level', '')
+    resources = DELFStudyResource.objects.all()
+    if selected_level:
+        resources = resources.filter(level=selected_level)
+    form = DELFResourceForm()
+    return render(request, 'club/delf_resources.html', {
+        'resources': resources,
+        'levels': level_choices,
+        'selected_level': selected_level,
+        'form': form,
+    })
+
+
+def media_hub(request):
+    photos = EventPhoto.objects.select_related('event').order_by('-id')[:12]
     documents = ClubDocument.objects.all().order_by('category', '-uploaded_at')
     podcasts = PodcastEpisode.objects.all()
+
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "Veuillez vous connecter pour téléverser des fichiers.")
+            return redirect('login')
+
+        action_type = request.POST.get('action_type')
+        ...
 
     context = {
         'photos': photos,
