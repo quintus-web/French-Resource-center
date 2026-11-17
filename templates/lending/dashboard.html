@@ -1,190 +1,203 @@
 {% extends 'base.html' %}
-
-{% block title %}Circulation Desk & Lending - French Resource Center{% endblock %}
+{% block title %}Issue & Return — French Library{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
 
-  <!-- Header & Title -->
+  <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
     <div>
-      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Circulation Desk</h1>
-      <p class="text-sm text-slate-500">Issue French books, process student returns, and track overdue items.</p>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Issue &amp; Return Books</h1>
+      <p class="text-sm text-slate-500">Check out books to students and staff, or process a return.</p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
-      <a href="{% url 'lending:bulk_import' %}" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition shadow-xs">
-        <i class="fa-solid fa-file-csv text-emerald-600"></i>
-        <span>Bulk CSV Import</span>
+      <a href="{% url 'lending:bulk_import' %}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition">
+        <i class="fa-solid fa-file-csv" aria-hidden="true"></i> Import from CSV
       </a>
-      <a href="/admin/resources/resource/add/" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
-        <i class="fa-solid fa-plus"></i>
-        <span>Add Book Title</span>
-      </a>
-      <a href="{% url 'lending:members' %}" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
-        <i class="fa-solid fa-users"></i>
-        <span>Members</span>
+      <a href="{% url 'resources:catalogue' %}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
+        <i class="fa-solid fa-book-open" aria-hidden="true"></i> Book Catalogue
       </a>
     </div>
   </div>
 
-  <!-- Operational Metrics -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- Active Loans -->
-    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-      <div>
-        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Active Loans</p>
-        <p class="text-3xl font-black text-slate-800 mt-1">{{ total_active }}</p>
+  <!-- Stats Row -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+      <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+        <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i>
       </div>
-      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
-        <i class="fa-solid fa-book-bookmark"></i>
+      <div>
+        <p class="text-[11px] uppercase font-bold text-slate-400 tracking-wide">Books Out</p>
+        <p class="text-2xl font-black text-slate-800">{{ total_active }}</p>
       </div>
     </div>
-
-    <!-- Overdue Items -->
-    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-      <div>
-        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Overdue Items</p>
-        <p class="text-3xl font-black {% if total_overdue > 0 %}text-rose-600{% else %}text-slate-800{% endif %} mt-1">
-          {{ total_overdue }}
-        </p>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+      <div class="w-10 h-10 {% if total_overdue > 0 %}bg-rose-50 text-rose-600{% else %}bg-slate-100 text-slate-400{% endif %} rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+        <i class="fa-solid fa-clock" aria-hidden="true"></i>
       </div>
-      <div class="w-12 h-12 {% if total_overdue > 0 %}bg-rose-50 text-rose-600{% else %}bg-slate-100 text-slate-400{% endif %} rounded-xl flex items-center justify-center text-xl">
-        <i class="fa-solid fa-clock"></i>
+      <div>
+        <p class="text-[11px] uppercase font-bold text-slate-400 tracking-wide">Overdue</p>
+        <p class="text-2xl font-black {% if total_overdue > 0 %}text-rose-600{% else %}text-slate-800{% endif %}">{{ total_overdue }}</p>
       </div>
     </div>
-
-    <!-- Resource Status Indicator -->
-    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-      <div>
-        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Service Status</p>
-        <p class="text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Operational
-        </p>
-        <p class="text-xs text-slate-400 mt-0.5">Direct Database Connection</p>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+      <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+        <i class="fa-solid fa-users" aria-hidden="true"></i>
       </div>
-      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
-        <i class="fa-solid fa-shield-halved"></i>
+      <div>
+        <p class="text-[11px] uppercase font-bold text-slate-400 tracking-wide">Members</p>
+        <p class="text-2xl font-black text-slate-800">{{ members.count }}</p>
+      </div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+      <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+      </div>
+      <div>
+        <p class="text-[11px] uppercase font-bold text-slate-400 tracking-wide">System</p>
+        <p class="text-sm font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span> Online
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- Primary Workspace: Fast Issue Box & Active Circulation Table -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <!-- Left Column: Fast Issue Form (4 cols) -->
-    <div class="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-      <div class="flex items-center space-x-2 pb-3 border-b border-slate-100">
-        <i class="fa-solid fa-arrow-right-arrow-left text-indigo-600"></i>
-        <h2 class="text-base font-bold text-slate-900">Issue Copy (Sortie)</h2>
+    <!-- Issue Form -->
+    <div class="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-5">
+      <div class="pb-3 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-hand-holding-hand text-indigo-500" aria-hidden="true"></i>
+          Give Out a Book
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">Search for the student, then search for the book.</p>
       </div>
 
-      <form action="{% url 'lending:issue' %}" method="POST" class="space-y-4">
+      <form action="{% url 'lending:issue' %}" method="POST" class="space-y-4" id="issueForm">
         {% csrf_token %}
 
+        <!-- Step 1: Student -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">
-            Accession Number (Code d'exemplaire) <span class="text-rose-500">*</span>
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-black mr-1">1</span>
+            Who is borrowing?
           </label>
-          {{ issue_form.accession_number }}
-          <p class="text-[11px] text-slate-400 mt-1">E.g., scan barcode or type FR-A2-001</p>
+          <div class="relative">
+            <input type="text" id="borrowerSearchInput" placeholder="Type student name or ID…"
+                   autocomplete="off"
+                   class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+            <div id="borrowerDropdown" class="absolute z-20 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 hidden max-h-48 overflow-y-auto"></div>
+          </div>
+          <input type="hidden" name="borrower_identifier" id="borrowerIdentifier">
+          <p id="borrowerSelected" class="text-[11px] text-emerald-600 font-semibold mt-1 hidden"></p>
         </div>
 
+        <!-- Step 2: Book -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">
-            Borrower ID (Admission / Staff No.) <span class="text-rose-500">*</span>
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-black mr-1">2</span>
+            Which book?
           </label>
-          {{ issue_form.borrower_identifier }}
+          <div class="relative">
+            <input type="text" id="bookSearchInput" placeholder="Type book title…"
+                   autocomplete="off"
+                   class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+            <div id="bookDropdown" class="absolute z-20 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 hidden max-h-48 overflow-y-auto"></div>
+          </div>
+          <input type="hidden" name="accession_number" id="accessionNumber">
+          <p id="bookSelected" class="text-[11px] text-emerald-600 font-semibold mt-1 hidden"></p>
         </div>
 
+        <!-- Step 3: Duration -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">
-            Duration (Days)
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-black mr-1">3</span>
+            How many days?
           </label>
-          {{ issue_form.loan_duration_days }}
+          <div class="flex gap-2">
+            <button type="button" onclick="setDays(7)"  data-days="7"  class="day-btn flex-1 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition">7 days</button>
+            <button type="button" onclick="setDays(14)" data-days="14" class="day-btn flex-1 py-2 text-xs font-semibold rounded-lg border border-indigo-400 bg-indigo-50 text-indigo-700 transition">14 days</button>
+            <button type="button" onclick="setDays(30)" data-days="30" class="day-btn flex-1 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition">30 days</button>
+          </div>
+          <input type="hidden" name="loan_duration_days" id="loanDays" value="14">
         </div>
 
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-sm transition flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-check"></i>
-          <span>Confirm Checkout</span>
+        <button type="submit" id="issueBtn"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg text-sm shadow-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Confirm — Give Out Book
         </button>
       </form>
     </div>
 
-    <!-- Right Column: Active Loans & Return Management (8 cols) -->
+    <!-- Active Loans Table -->
     <div class="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 class="text-base font-bold text-slate-900">Current Active Loans</h2>
-          <p class="text-xs text-slate-500">Books currently in circulation with students and teachers.</p>
+          <h2 class="text-base font-bold text-slate-900">Books Currently Out</h2>
+          <p class="text-xs text-slate-400">Click "Returned" when a student brings a book back.</p>
         </div>
-
-        <!-- Filter / Quick Search -->
-        <input type="text" id="loanSearch" placeholder="Filter loans in table..." 
-               class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-56"
-               onkeyup="filterTable()">
+        <input type="text" id="loanSearch" placeholder="Filter by name or title…"
+               class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-400 outline-none w-full sm:w-52"
+               oninput="filterTable()">
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse" id="loansTable">
-          <thead>
-            <tr class="bg-slate-50/75 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <th class="py-3 px-4">Accession</th>
-              <th class="py-3 px-4">Title & Level</th>
-              <th class="py-3 px-4">Borrower</th>
-              <th class="py-3 px-4">Due Date</th>
+        <table class="w-full text-left" id="loansTable">
+          <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+            <tr>
+              <th class="py-3 px-4">Book</th>
+              <th class="py-3 px-4">Borrowed By</th>
+              <th class="py-3 px-4">Due Back</th>
               <th class="py-3 px-4 text-center">Status</th>
               <th class="py-3 px-4 text-right">Action</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-xs">
             {% for loan in active_loans %}
-            <tr class="hover:bg-slate-50/80 transition {% if loan.is_overdue %}bg-rose-50/40{% endif %}">
-              <td class="py-3 px-4 font-mono font-semibold text-slate-700">
-                {{ loan.copy.accession_number }}
-              </td>
+            <tr class="hover:bg-slate-50 transition {% if loan.is_overdue %}bg-rose-50/50{% endif %}">
               <td class="py-3 px-4">
-                <div class="font-medium text-slate-900">{{ loan.copy.resource.title }}</div>
-                <span class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 mt-0.5">
-                  {{ loan.copy.resource.get_level_display }}
-                </span>
+                <div class="font-semibold text-slate-900">{{ loan.copy.resource.title }}</div>
+                <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ loan.copy.accession_number }} &bull; {{ loan.copy.resource.get_level_display }}</div>
               </td>
               <td class="py-3 px-4">
                 <div class="font-medium text-slate-800">{{ loan.borrower.first_name }} {{ loan.borrower.last_name }}</div>
-                <div class="text-[11px] text-slate-400 font-mono">{{ loan.borrower.identifier }} {% if loan.borrower.class_form %}&bull; {{ loan.borrower.class_form }}{% endif %}</div>
+                <div class="text-[10px] text-slate-400">{{ loan.borrower.identifier }}{% if loan.borrower.class_form %} &bull; {{ loan.borrower.class_form }}{% endif %}</div>
               </td>
               <td class="py-3 px-4 whitespace-nowrap">
                 <div class="font-medium {% if loan.is_overdue %}text-rose-600 font-bold{% else %}text-slate-700{% endif %}">
                   {{ loan.due_date|date:"d M Y" }}
                 </div>
-                <div class="text-[10px] text-slate-400">Issued: {{ loan.issued_at|date:"d M" }}</div>
+                <div class="text-[10px] text-slate-400">Issued {{ loan.issued_at|date:"d M" }}</div>
               </td>
-              <td class="py-3 px-4 text-center whitespace-nowrap">
+              <td class="py-3 px-4 text-center">
                 {% if loan.is_overdue %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
-                    Overdue by {{ loan.days_overdue }}d
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
+                    {{ loan.days_overdue }}d overdue
                   </span>
                 {% else %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    On Time
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    On time
                   </span>
                 {% endif %}
               </td>
-              <td class="py-3 px-4 text-right whitespace-nowrap">
-                <form action="{% url 'lending:return' loan.id %}" method="POST" onsubmit="return confirm('Confirm book return for copy {{ loan.copy.accession_number }}?')">
+              <td class="py-3 px-4 text-right">
+                <form action="{% url 'lending:return' loan.id %}" method="POST">
                   {% csrf_token %}
-                  <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1.5 rounded-md text-[11px] shadow-sm transition inline-flex items-center space-x-1">
-                    <i class="fa-solid fa-arrow-down-left"></i>
-                    <span>Return</span>
+                  <button type="submit"
+                          onclick="return confirm('Mark this copy of \'{{ loan.copy.resource.title|escapejs }}\' as returned?')"
+                          class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-[11px] shadow-sm transition inline-flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Returned
                   </button>
                 </form>
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
-                <i class="fa-solid fa-box-open text-2xl mb-2 text-slate-300 block"></i>
-                No active loans found. All copies are currently accounted for in the resource center!
+              <td colspan="5" class="py-12 text-center text-slate-400">
+                <i class="fa-solid fa-box-open text-3xl text-slate-300 mb-2 block" aria-hidden="true"></i>
+                No books are currently out — all copies are in the library.
               </td>
             </tr>
             {% endfor %}
@@ -192,37 +205,32 @@
         </table>
       </div>
     </div>
-
   </div>
 
-  <!-- Recent Returns History -->
+  <!-- Recent Returns -->
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
     <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-      <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
-      Recent Returns Archive (Last 10)
+      <i class="fa-solid fa-clock-rotate-left text-slate-400" aria-hidden="true"></i>
+      Recently Returned (Last 10)
     </h3>
     <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs border-collapse">
-        <thead>
-          <tr class="border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase">
-            <th class="py-2 px-3">Accession</th>
-            <th class="py-2 px-3">Title</th>
-            <th class="py-2 px-3">Returned By</th>
-            <th class="py-2 px-3">Returned Date</th>
+      <table class="w-full text-xs">
+        <thead class="border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase">
+          <tr>
+            <th class="py-2 px-3 text-left">Book</th>
+            <th class="py-2 px-3 text-left">Returned By</th>
+            <th class="py-2 px-3 text-left">Returned On</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-slate-600">
           {% for ret in recent_returns %}
           <tr>
-            <td class="py-2 px-3 font-mono text-slate-700">{{ ret.copy.accession_number }}</td>
-            <td class="py-2 px-3">{{ ret.copy.resource.title }}</td>
-            <td class="py-2 px-3">{{ ret.borrower.first_name }} {{ ret.borrower.last_name }} ({{ ret.borrower.identifier }})</td>
-            <td class="py-2 px-3 text-slate-500">{{ ret.returned_at|date:"d M Y, H:i" }}</td>
+            <td class="py-2 px-3 font-medium">{{ ret.copy.resource.title }} <span class="text-slate-400 font-mono">({{ ret.copy.accession_number }})</span></td>
+            <td class="py-2 px-3">{{ ret.borrower.first_name }} {{ ret.borrower.last_name }}</td>
+            <td class="py-2 px-3 text-slate-400">{{ ret.returned_at|date:"d M Y, H:i" }}</td>
           </tr>
           {% empty %}
-          <tr>
-            <td colspan="4" class="py-3 text-center text-slate-400">No recent returns recorded yet.</td>
-          </tr>
+          <tr><td colspan="3" class="py-4 text-center text-slate-400">No returns recorded yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -231,15 +239,74 @@
 
 </div>
 
-<!-- Quick In-Table Search JavaScript -->
 <script>
-  function filterTable() {
-    const input = document.getElementById("loanSearch").value.toLowerCase();
-    const rows = document.querySelectorAll("#loansTable tbody tr");
+  const MEMBER_URL = "{% url 'lending:search_members' %}";
+  const BOOK_URL   = "{% url 'lending:search_books' %}";
 
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(input) ? "" : "none";
+  function makeSearch(inputId, dropdownId, hiddenId, selectedId, url) {
+    const input    = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    const hidden   = document.getElementById(hiddenId);
+    const selected = document.getElementById(selectedId);
+    let timer;
+
+    input.addEventListener('input', function() {
+      clearTimeout(timer);
+      const q = this.value.trim();
+      hidden.value = '';
+      selected.classList.add('hidden');
+      if (q.length < 2) { dropdown.classList.add('hidden'); return; }
+      timer = setTimeout(function() {
+        fetch(url + '?q=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            dropdown.innerHTML = '';
+            if (!data.length) {
+              dropdown.innerHTML = '<div class="px-3 py-2 text-xs text-slate-400">No results found</div>';
+            } else {
+              data.forEach(function(item) {
+                const div = document.createElement('div');
+                div.className = 'px-3 py-2 cursor-pointer hover:bg-indigo-50 border-b border-slate-100 last:border-0';
+                div.innerHTML = '<div class="text-xs font-semibold text-slate-800">' + item.label + '</div>' +
+                                '<div class="text-[11px] text-slate-400">' + item.sub + '</div>';
+                div.addEventListener('click', function() {
+                  input.value   = item.label;
+                  hidden.value  = item.id;
+                  selected.textContent = '\u2713 Selected: ' + item.label;
+                  selected.classList.remove('hidden');
+                  dropdown.classList.add('hidden');
+                });
+                dropdown.appendChild(div);
+              });
+            }
+            dropdown.classList.remove('hidden');
+          });
+      }, 250);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  makeSearch('borrowerSearchInput', 'borrowerDropdown', 'borrowerIdentifier', 'borrowerSelected', MEMBER_URL);
+  makeSearch('bookSearchInput',     'bookDropdown',     'accessionNumber',    'bookSelected',     BOOK_URL);
+
+  function setDays(n) {
+    document.getElementById('loanDays').value = n;
+    document.querySelectorAll('.day-btn').forEach(function(btn) {
+      const active = parseInt(btn.dataset.days) === n;
+      btn.className = 'day-btn flex-1 py-2 text-xs font-semibold rounded-lg border transition ' +
+        (active ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700');
+    });
+  }
+
+  function filterTable() {
+    const q = document.getElementById('loanSearch').value.toLowerCase();
+    document.querySelectorAll('#loansTable tbody tr').forEach(function(row) {
+      row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
     });
   }
 </script>

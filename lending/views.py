@@ -2,16 +2,18 @@ from django.shortcuts import render
 
 # Create your views here.
 from datetime import timedelta
+import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from resources.models import BookCopy
 from .forms import BorrowerForm, IssueBookForm
 from .models import Borrower, Loan
-from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -21,6 +23,7 @@ def circulation_dashboard(request):
     overdue_count = sum(1 for loan in active_loans if loan.is_overdue)
     issue_form = IssueBookForm()
     borrower_form = BorrowerForm()
+    members = Borrower.objects.filter(is_active=True).order_by('last_name', 'first_name')
     context = {
         'active_loans': active_loans,
         'recent_returns': recent_returns,
@@ -28,28 +31,63 @@ def circulation_dashboard(request):
         'total_overdue': overdue_count,
         'issue_form': issue_form,
         'borrower_form': borrower_form,
+        'members': members,
     }
     return render(request, 'lending/dashboard.html', context)
 
 
 @login_required
+def search_members(request):
+    q = request.GET.get('q', '').strip()
+    results = []
+    if q:
+        members = Borrower.objects.filter(
+            Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(identifier__icontains=q),
+            is_active=True
+        )[:10]
+        results = [{
+            'id': m.identifier,
+            'label': f'{m.first_name} {m.last_name}',
+            'sub': f'{m.identifier} • {m.class_form or m.get_borrower_type_display()}',
+        } for m in members]
+    return JsonResponse(results, safe=False)
+
+
+@login_required
+def search_books(request):
+    q = request.GET.get('q', '').strip()
+    results = []
+    if q:
+        copies = BookCopy.objects.filter(
+            Q(resource__title__icontains=q) | Q(accession_number__icontains=q),
+            status='AVAILABLE'
+        ).select_related('resource')[:10]
+        results = [{
+            'id': c.accession_number,
+            'label': c.resource.title,
+            'sub': f'{c.accession_number} • {c.resource.get_level_display()} • {c.shelf_location or "No shelf set"}',
+        } for c in copies]
+    return JsonResponse(results, safe=False)
+
+
+@login_required
 def members_list(request):
     q = request.GET.get('q', '').strip()
+    type_filter = request.GET.get('type', '')
     members = Borrower.objects.all()
     if q:
         members = members.filter(
-            first_name__icontains=q
-        ) | members.filter(
-            last_name__icontains=q
-        ) | members.filter(
-            identifier__icontains=q
+            Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(identifier__icontains=q)
         )
+    if type_filter:
+        members = members.filter(borrower_type=type_filter)
     members = members.order_by('last_name', 'first_name')
     borrower_form = BorrowerForm()
     return render(request, 'lending/members.html', {
         'members': members,
         'borrower_form': borrower_form,
         'q': q,
+        'type_filter': type_filter,
         'total': Borrower.objects.count(),
     })
 
@@ -200,12 +238,21 @@ def bulk_import(request):
                         # Ensure parent resource exists
                         resource, _ = Resource.objects.get_or_create(
                             title=title,
-                            author=author,
                             defaults={
                                 'level': level,
                                 'category': category,
                             }
                         )
+
+                        # Attach author if provided
+                        if author:
+                            from resources.models import Author
+                            last, _, first = author.partition(',')
+                            author_obj, _ = Author.objects.get_or_create(
+                                last_name=last.strip(),
+                                first_name=first.strip()
+                            )
+                            resource.authors.add(author_obj)
 
                         # Create copy if accession number does not exist
                         _, copy_created = BookCopy.objects.get_or_create(

@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-
-{% block title %}Members — Circulation Desk{% endblock %}
+{% block title %}Members — French Library{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -9,70 +8,107 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
     <div>
       <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Members</h1>
-      <p class="text-sm text-slate-500">{{ total }} registered borrower{{ total|pluralize }}. Register new members here as you issue books.</p>
+      <p class="text-sm text-slate-500">{{ total }} registered member{{ total|pluralize }}.</p>
     </div>
-    <button onclick="document.getElementById('registerModal').classList.remove('hidden')"
-            class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition">
-      <i class="fa-solid fa-user-plus"></i>
-      <span>Register Member</span>
+    <button onclick="openRegister()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition">
+      <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Register New Member
     </button>
   </div>
 
-  <!-- Search -->
-  <form method="get" class="flex gap-2">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search by name or ID…"
-           class="flex-1 text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 transition">
-      Search
-    </button>
-    {% if q %}
-    <a href="{% url 'lending:members' %}" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 rounded-lg border border-slate-200 transition">Clear</a>
-    {% endif %}
-  </form>
+  <!-- Filter tabs + Search -->
+  <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+    <div class="flex gap-1 bg-slate-100 rounded-lg p-1 text-xs font-semibold">
+      <a href="?{% if q %}q={{ q }}&{% endif %}" 
+         class="px-3 py-1.5 rounded-md transition {% if not type_filter %}bg-white shadow-sm text-slate-800{% else %}text-slate-500 hover:text-slate-700{% endif %}">
+        All
+      </a>
+      <a href="?type=STUDENT{% if q %}&q={{ q }}{% endif %}"
+         class="px-3 py-1.5 rounded-md transition {% if type_filter == 'STUDENT' %}bg-white shadow-sm text-slate-800{% else %}text-slate-500 hover:text-slate-700{% endif %}">
+        Students
+      </a>
+      <a href="?type=TEACHING{% if q %}&q={{ q }}{% endif %}"
+         class="px-3 py-1.5 rounded-md transition {% if type_filter == 'TEACHING' %}bg-white shadow-sm text-slate-800{% else %}text-slate-500 hover:text-slate-700{% endif %}">
+        Teaching Staff
+      </a>
+      <a href="?type=NON_TEACHING{% if q %}&q={{ q }}{% endif %}"
+         class="px-3 py-1.5 rounded-md transition {% if type_filter == 'NON_TEACHING' %}bg-white shadow-sm text-slate-800{% else %}text-slate-500 hover:text-slate-700{% endif %}">
+        Non-Teaching Staff
+      </a>
+    </div>
+    <form method="get" class="flex gap-2 flex-1">
+      {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
+      <input type="text" name="q" value="{{ q }}" placeholder="Search by name or ID…"
+             class="flex-1 text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+      <button type="submit" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 transition">Search</button>
+      {% if q %}<a href="?{% if type_filter %}type={{ type_filter }}{% endif %}" class="px-3 py-2 text-xs text-slate-500 hover:text-slate-700 rounded-lg border border-slate-200 transition">Clear</a>{% endif %}
+    </form>
+  </div>
 
   <!-- Members Table -->
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs border-collapse">
-        <thead>
-          <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <th class="py-3 px-4">ID</th>
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <tr>
             <th class="py-3 px-4">Name</th>
+            <th class="py-3 px-4">ID</th>
             <th class="py-3 px-4">Type</th>
-            <th class="py-3 px-4">Class / Dept</th>
-            <th class="py-3 px-4">Phone</th>
-            <th class="py-3 px-4 text-center">Active Loans</th>
+            <th class="py-3 px-4">Class / Department</th>
+            <th class="py-3 px-4">Contact</th>
+            <th class="py-3 px-4 text-center">Books Out</th>
             <th class="py-3 px-4 text-center">Status</th>
+            <th class="py-3 px-4 text-right">Action</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
           {% for m in members %}
           <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-4 font-mono font-semibold text-slate-700">{{ m.identifier }}</td>
-            <td class="py-3 px-4 font-medium text-slate-900">{{ m.first_name }} {{ m.last_name }}</td>
-            <td class="py-3 px-4 text-slate-500">{{ m.get_borrower_type_display }}</td>
-            <td class="py-3 px-4 text-slate-500">{{ m.class_form|default:"—" }}</td>
-            <td class="py-3 px-4 text-slate-500">{{ m.phone|default:"—" }}</td>
+            <td class="py-3 px-4">
+              <div class="font-semibold text-slate-900">{{ m.first_name }} {{ m.last_name }}</div>
+            </td>
+            <td class="py-3 px-4 font-mono text-slate-600">{{ m.identifier }}</td>
+            <td class="py-3 px-4">
+              {% if m.borrower_type == 'STUDENT' %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">Student</span>
+              {% elif m.borrower_type == 'TEACHING' %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">Teaching</span>
+              {% else %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Non-Teaching</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-slate-500">{{ m.display_group }}</td>
+            <td class="py-3 px-4 text-slate-400">
+              {% if m.phone %}{{ m.phone }}{% elif m.email %}{{ m.email }}{% else %}—{% endif %}
+            </td>
             <td class="py-3 px-4 text-center">
               {% with count=m.active_loans_count %}
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
-                {% if count > 0 %}bg-indigo-50 text-indigo-700 border border-indigo-200{% else %}bg-slate-100 text-slate-500{% endif %}">
+                {% if count > 0 %}bg-indigo-50 text-indigo-700 border border-indigo-200{% else %}bg-slate-100 text-slate-400{% endif %}">
                 {{ count }}
               </span>
               {% endwith %}
             </td>
             <td class="py-3 px-4 text-center">
               {% if m.is_active %}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
               {% else %}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Frozen</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Frozen</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-right">
+              {% if m.is_active %}
+              <button onclick="prefillIssue('{{ m.identifier|escapejs }}', '{{ m.first_name|escapejs }} {{ m.last_name|escapejs }}')"
+                      class="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition">
+                <i class="fa-solid fa-book" aria-hidden="true"></i> Issue Book
+              </button>
               {% endif %}
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="7" class="py-10 text-center text-slate-400">
-              <i class="fa-solid fa-users text-2xl text-slate-300 mb-2 block"></i>
+            <td colspan="8" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-users text-3xl text-slate-300 mb-2 block" aria-hidden="true"></i>
               {% if q %}No members match "{{ q }}".{% else %}No members registered yet.{% endif %}
             </td>
           </tr>
@@ -84,18 +120,49 @@
 
 </div>
 
-<!-- Register Member Modal -->
-<div id="registerModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+<!-- ── Register Member Modal ── -->
+<div id="registerModal" class="fixed inset-0 z-50 bg-black/50 items-center justify-center p-4" style="display:none">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between pb-2 border-b border-slate-100">
       <h2 class="text-sm font-bold text-slate-900">Register New Member</h2>
-      <button onclick="document.getElementById('registerModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark"></i>
+      <button onclick="closeRegister()" class="text-slate-400 hover:text-slate-600 p-1">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
       </button>
     </div>
-    <form action="{% url 'lending:register_borrower' %}" method="POST" class="space-y-3">
+
+    <form action="{% url 'lending:register_borrower' %}" method="POST" class="space-y-4">
       {% csrf_token %}
       <input type="hidden" name="next" value="{% url 'lending:members' %}">
+
+      <!-- Member type selector — big buttons -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-2">Who are you registering?</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="type-card cursor-pointer">
+            <input type="radio" name="borrower_type" value="STUDENT" class="sr-only" checked onchange="toggleMemberFields()">
+            <div class="type-card-inner border-2 border-sky-400 bg-sky-50 rounded-xl p-3 text-center transition">
+              <i class="fa-solid fa-user-graduate text-sky-600 text-xl mb-1 block" aria-hidden="true"></i>
+              <span class="text-xs font-bold text-sky-700">Student</span>
+            </div>
+          </label>
+          <label class="type-card cursor-pointer">
+            <input type="radio" name="borrower_type" value="TEACHING" class="sr-only" onchange="toggleMemberFields()">
+            <div class="type-card-inner border-2 border-slate-200 bg-white rounded-xl p-3 text-center transition">
+              <i class="fa-solid fa-chalkboard-user text-violet-500 text-xl mb-1 block" aria-hidden="true"></i>
+              <span class="text-xs font-bold text-slate-600">Teaching Staff</span>
+            </div>
+          </label>
+          <label class="type-card cursor-pointer">
+            <input type="radio" name="borrower_type" value="NON_TEACHING" class="sr-only" onchange="toggleMemberFields()">
+            <div class="type-card-inner border-2 border-slate-200 bg-white rounded-xl p-3 text-center transition">
+              <i class="fa-solid fa-id-badge text-amber-500 text-xl mb-1 block" aria-hidden="true"></i>
+              <span class="text-xs font-bold text-slate-600">Non-Teaching Staff</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Name -->
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">First Name <span class="text-rose-500">*</span></label>
@@ -106,29 +173,194 @@
           {{ borrower_form.last_name }}
         </div>
       </div>
+
+      <!-- ID -->
       <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">ID / Admission No. <span class="text-rose-500">*</span></label>
+        <label class="block text-xs font-semibold text-slate-700 mb-1" id="idLabel">
+          Admission Number <span class="text-rose-500">*</span>
+        </label>
         {{ borrower_form.identifier }}
       </div>
+
+      <!-- Student-only: Class -->
+      <div id="classRow">
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Class / Form <span class="text-rose-500">*</span></label>
+        {{ borrower_form.class_form }}
+        <p class="text-[11px] text-slate-400 mt-1">e.g. Form 3 East, Grade 10B</p>
+      </div>
+
+      <!-- Staff-only: Department -->
+      <div id="deptRow" class="hidden">
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Department</label>
+        {{ borrower_form.department }}
+        <p class="text-[11px] text-slate-400 mt-1">e.g. Sciences, Administration, Bursar's Office</p>
+      </div>
+
+      <!-- Contact (optional for all) -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Type</label>
-          {{ borrower_form.borrower_type }}
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Phone <span class="text-slate-400 font-normal">(optional)</span></label>
+          {{ borrower_form.phone }}
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Class / Dept</label>
-          {{ borrower_form.class_form }}
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Email <span class="text-slate-400 font-normal">(optional)</span></label>
+          {{ borrower_form.email }}
         </div>
       </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
-        {{ borrower_form.phone }}
-      </div>
+
       <button type="submit"
-              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-sm transition">
-        Register Member
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-sm shadow-sm transition">
+        Save Member
       </button>
     </form>
   </div>
 </div>
+
+<!-- ── Issue Book Modal ── -->
+<div id="issueModal" class="fixed inset-0 z-50 bg-black/50 items-center justify-center p-4" style="display:none">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
+    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+      <h2 class="text-sm font-bold text-slate-900">Issue a Book</h2>
+      <button onclick="document.getElementById('issueModal').style.display='none'" class="text-slate-400 hover:text-slate-600 p-1">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+    <form action="{% url 'lending:issue' %}" method="POST" class="space-y-4">
+      {% csrf_token %}
+      <div class="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2 text-xs">
+        <span class="text-slate-500">Issuing to:</span>
+        <span id="modalMemberName" class="font-bold text-indigo-700 ml-1"></span>
+      </div>
+      <input type="hidden" name="borrower_identifier" id="modalBorrowerId">
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Which book?</label>
+        <div class="relative">
+          <input type="text" id="modalBookInput" placeholder="Type book title…" autocomplete="off"
+                 class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+          <div id="modalBookDropdown" class="absolute z-30 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 hidden max-h-48 overflow-y-auto"></div>
+        </div>
+        <input type="hidden" name="accession_number" id="modalAccession">
+        <p id="modalBookSelected" class="text-[11px] text-emerald-600 font-semibold mt-1 hidden"></p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Loan period</label>
+        <div class="flex gap-2">
+          <button type="button" onclick="setModalDays(7)"  data-days="7"  class="modal-day flex-1 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-indigo-50 transition">7 days</button>
+          <button type="button" onclick="setModalDays(14)" data-days="14" class="modal-day flex-1 py-2 text-xs font-semibold rounded-lg border border-indigo-400 bg-indigo-50 text-indigo-700 transition">14 days</button>
+          <button type="button" onclick="setModalDays(30)" data-days="30" class="modal-day flex-1 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-indigo-50 transition">30 days</button>
+        </div>
+        <input type="hidden" name="loan_duration_days" id="modalDays" value="14">
+      </div>
+
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-sm shadow-sm transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-check" aria-hidden="true"></i> Confirm Issue
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const BOOK_URL = "{% url 'lending:search_books' %}";
+
+  /* ── Register modal ── */
+  function openRegister() {
+    document.getElementById('registerModal').style.display = 'flex';
+    toggleMemberFields();
+  }
+  function closeRegister() {
+    document.getElementById('registerModal').style.display = 'none';
+  }
+
+  function toggleMemberFields() {
+    const type = document.querySelector('input[name="borrower_type"]:checked').value;
+    const isStudent = type === 'STUDENT';
+
+    document.getElementById('classRow').classList.toggle('hidden', !isStudent);
+    document.getElementById('deptRow').classList.toggle('hidden', isStudent);
+    document.getElementById('idLabel').textContent =
+      isStudent ? 'Admission Number *' : 'Staff ID *';
+
+    /* Update card highlight */
+    document.querySelectorAll('.type-card input').forEach(function(radio) {
+      const inner = radio.nextElementSibling;
+      if (radio.checked) {
+        inner.classList.remove('border-slate-200', 'bg-white');
+        if (radio.value === 'STUDENT')      inner.classList.add('border-sky-400',    'bg-sky-50');
+        if (radio.value === 'TEACHING')     inner.classList.add('border-violet-400', 'bg-violet-50');
+        if (radio.value === 'NON_TEACHING') inner.classList.add('border-amber-400',  'bg-amber-50');
+      } else {
+        inner.classList.remove('border-sky-400','bg-sky-50','border-violet-400','bg-violet-50','border-amber-400','bg-amber-50');
+        inner.classList.add('border-slate-200', 'bg-white');
+      }
+    });
+  }
+
+  /* ── Issue modal ── */
+  function prefillIssue(identifier, name) {
+    document.getElementById('modalBorrowerId').value = identifier;
+    document.getElementById('modalMemberName').textContent = name;
+    document.getElementById('modalBookInput').value = '';
+    document.getElementById('modalAccession').value = '';
+    document.getElementById('modalBookSelected').classList.add('hidden');
+    document.getElementById('issueModal').style.display = 'flex';
+  }
+
+  /* ── Book search dropdown ── */
+  (function() {
+    const input    = document.getElementById('modalBookInput');
+    const dropdown = document.getElementById('modalBookDropdown');
+    const hidden   = document.getElementById('modalAccession');
+    const selected = document.getElementById('modalBookSelected');
+    let timer;
+
+    input.addEventListener('input', function() {
+      clearTimeout(timer);
+      const q = this.value.trim();
+      hidden.value = '';
+      selected.classList.add('hidden');
+      if (q.length < 2) { dropdown.classList.add('hidden'); return; }
+      timer = setTimeout(function() {
+        fetch(BOOK_URL + '?q=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            dropdown.innerHTML = '';
+            if (!data.length) {
+              dropdown.innerHTML = '<div class="px-3 py-2 text-xs text-slate-400">No available copies found</div>';
+            } else {
+              data.forEach(function(item) {
+                const div = document.createElement('div');
+                div.className = 'px-3 py-2 cursor-pointer hover:bg-indigo-50 border-b border-slate-100 last:border-0';
+                div.innerHTML = '<div class="text-xs font-semibold text-slate-800">' + item.label + '</div>' +
+                                '<div class="text-[11px] text-slate-400">' + item.sub + '</div>';
+                div.addEventListener('click', function() {
+                  input.value  = item.label;
+                  hidden.value = item.id;
+                  selected.textContent = '\u2713 ' + item.label + ' (' + item.id + ')';
+                  selected.classList.remove('hidden');
+                  dropdown.classList.add('hidden');
+                });
+                dropdown.appendChild(div);
+              });
+            }
+            dropdown.classList.remove('hidden');
+          });
+      }, 250);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
+    });
+  })();
+
+  function setModalDays(n) {
+    document.getElementById('modalDays').value = n;
+    document.querySelectorAll('.modal-day').forEach(function(btn) {
+      const active = parseInt(btn.dataset.days) === n;
+      btn.className = 'modal-day flex-1 py-2 text-xs font-semibold rounded-lg border transition ' +
+        (active ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600 hover:bg-indigo-50');
+    });
+  }
+</script>
 {% endblock %}

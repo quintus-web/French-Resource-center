@@ -10,24 +10,30 @@ from resources.models import BookCopy
 class Borrower(models.Model):
     BORROWER_TYPES = [
         ('STUDENT', 'Student'),
-        ('TEACHER', 'Teacher / Staff'),
+        ('TEACHING', 'Teaching Staff'),
+        ('NON_TEACHING', 'Non-Teaching Staff'),
     ]
 
     identifier = models.CharField(
         max_length=50,
         unique=True,
         db_index=True,
-        help_text="Student Admission Number or Teacher Staff ID"
+        help_text="Student Admission Number or Staff ID"
     )
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    borrower_type = models.CharField(max_length=10, choices=BORROWER_TYPES, default='STUDENT')
+    borrower_type = models.CharField(max_length=15, choices=BORROWER_TYPES, default='STUDENT')
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     class_form = models.CharField(
         max_length=50,
         blank=True,
-        help_text="E.g., Form 3 East, Grade 10, or French Department"
+        help_text="For students: e.g. Form 3 East. Leave blank for staff."
+    )
+    department = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="For staff: e.g. Sciences, Administration, Bursar's Office"
     )
     is_active = models.BooleanField(
         default=True,
@@ -44,6 +50,13 @@ class Borrower(models.Model):
     @property
     def active_loans_count(self):
         return self.loans.filter(returned_at__isnull=True).count()
+
+    @property
+    def display_group(self):
+        """Human-readable group label for the members table."""
+        if self.borrower_type == 'STUDENT':
+            return self.class_form or 'Student'
+        return self.department or self.get_borrower_type_display()
 
 
 class Loan(models.Model):

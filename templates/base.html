@@ -27,23 +27,33 @@
           <div class="hidden md:flex items-center space-x-1 text-xs font-semibold">
             <a href="{% url 'lending:dashboard' %}" 
                class="px-3 py-2 rounded-lg transition flex items-center gap-1.5 {% if request.resolver_match.app_name == 'lending' %}bg-indigo-50 text-indigo-700 font-bold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
-              <i class="fa-solid fa-arrow-right-arrow-left"></i>
-              <span>Circulation Desk</span>
+              <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+              <span>Issue &amp; Return</span>
+            </a>
+            <a href="{% url 'resources:catalogue' %}" 
+               class="px-3 py-2 rounded-lg transition flex items-center gap-1.5 {% if request.resolver_match.app_name == 'resources' %}bg-indigo-50 text-indigo-700 font-bold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+              <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+              <span>Book Catalogue</span>
+            </a>
+            <a href="{% url 'lending:members' %}" 
+               class="px-3 py-2 rounded-lg transition flex items-center gap-1.5 {% if request.resolver_match.url_name == 'members' %}bg-indigo-50 text-indigo-700 font-bold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+              <i class="fa-solid fa-users" aria-hidden="true"></i>
+              <span>Members</span>
             </a>
             <a href="{% url 'club:dashboard' %}" 
                class="px-3 py-2 rounded-lg transition flex items-center gap-1.5 {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'club' %}bg-indigo-50 text-indigo-700 font-bold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
-              <i class="fa-solid fa-people-group"></i>
-              <span>Club Activities</span>
+              <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+              <span>French Club</span>
             </a>
             <a href="{% url 'club:delf_resources' %}" 
                class="px-3 py-2 rounded-lg transition flex items-center gap-1.5 {% if request.resolver_match.url_name == 'delf_resources' %}bg-indigo-50 text-indigo-700 font-bold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
-              <i class="fa-solid fa-graduation-cap"></i>
-              <span>DELF Resources</span>
+              <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+              <span>DELF Prep</span>
             </a>
             <a href="{% url 'club:media_hub' %}" 
                class="px-3 py-2 rounded-lg transition flex items-center gap-1.5 {% if request.resolver_match.url_name == 'media_hub' %}bg-indigo-50 text-indigo-700 font-bold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
-              <i class="fa-solid fa-photo-film"></i>
-              <span>Media &amp; Gallery</span>
+              <i class="fa-solid fa-photo-film" aria-hidden="true"></i>
+              <span>Media &amp; Photos</span>
             </a>
           </div>
         </div>
@@ -57,11 +67,11 @@
               <span class="font-semibold">{{ user.username }}</span>
             </span>
 
-            {% if user.is_staff or user.is_superuser %}
+            {% if user.is_superuser %}
             <a href="/admin/" target="_blank" 
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition">
-              <i class="fa-solid fa-sliders text-slate-500"></i>
-              <span class="hidden sm:inline">Django Admin</span>
+              <i class="fa-solid fa-sliders text-slate-500" aria-hidden="true"></i>
+              <span class="hidden sm:inline">Admin</span>
             </a>
             {% endif %}
 
@@ -94,16 +104,22 @@
     <!-- Mobile Navigation Drawer -->
     <div id="mobileNav" class="hidden md:hidden border-t border-slate-200 px-4 pt-2 pb-3 space-y-1 bg-white">
       <a href="{% url 'lending:dashboard' %}" class="block px-3 py-2 rounded-lg text-xs font-semibold {% if request.resolver_match.app_name == 'lending' %}bg-indigo-50 text-indigo-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-        <i class="fa-solid fa-arrow-right-arrow-left mr-2"></i>Circulation Desk
+        <i class="fa-solid fa-arrow-right-arrow-left mr-2" aria-hidden="true"></i>Issue &amp; Return
+      </a>
+      <a href="{% url 'resources:catalogue' %}" class="block px-3 py-2 rounded-lg text-xs font-semibold {% if request.resolver_match.app_name == 'resources' %}bg-indigo-50 text-indigo-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        <i class="fa-solid fa-book-open mr-2" aria-hidden="true"></i>Book Catalogue
+      </a>
+      <a href="{% url 'lending:members' %}" class="block px-3 py-2 rounded-lg text-xs font-semibold {% if request.resolver_match.url_name == 'members' %}bg-indigo-50 text-indigo-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        <i class="fa-solid fa-users mr-2" aria-hidden="true"></i>Members
       </a>
       <a href="{% url 'club:dashboard' %}" class="block px-3 py-2 rounded-lg text-xs font-semibold {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'club' %}bg-indigo-50 text-indigo-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-        <i class="fa-solid fa-people-group mr-2"></i>Club Activities
+        <i class="fa-solid fa-people-group mr-2" aria-hidden="true"></i>French Club
       </a>
       <a href="{% url 'club:delf_resources' %}" class="block px-3 py-2 rounded-lg text-xs font-semibold {% if request.resolver_match.url_name == 'delf_resources' %}bg-indigo-50 text-indigo-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-        <i class="fa-solid fa-graduation-cap mr-2"></i>DELF Resources
+        <i class="fa-solid fa-graduation-cap mr-2" aria-hidden="true"></i>DELF Prep
       </a>
       <a href="{% url 'club:media_hub' %}" class="block px-3 py-2 rounded-lg text-xs font-semibold {% if request.resolver_match.url_name == 'media_hub' %}bg-indigo-50 text-indigo-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-        <i class="fa-solid fa-photo-film mr-2"></i>Media &amp; Gallery
+        <i class="fa-solid fa-photo-film mr-2" aria-hidden="true"></i>Media &amp; Photos
       </a>
     </div>
   </nav>
