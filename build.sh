@@ -5,22 +5,9 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 python manage.py collectstatic --no-input
-python manage.py migrate
 
-#!/usr/bin/env bash
-# Exit immediately if a command exits with a non-zero status
-set -o errexit
-
-# Upgrade pip and install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Collect static files for WhiteNoise
-python manage.py collectstatic --no-input
-
-# Run migrations against Neon PostgreSQL
 if [[ -z "${DATABASE_URL:-}" ]]; then
-    echo "ERROR: DATABASE_URL is not set. Configure a persistent PostgreSQL database for the Render service."
+    echo "ERROR: DATABASE_URL is not set. Configure the Neon PostgreSQL connection on Render."
     exit 1
 fi
 
