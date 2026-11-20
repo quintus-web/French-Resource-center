@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Book Catalogue{% endblock %}
 
@@ -19,7 +19,7 @@
 
   <!-- Search & Filters -->
   <form method="get" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-wrap gap-3">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search title, author, accession no…"
+    <input type="text" name="q" value="{{ q }}" placeholder="Search title, author, accession noâ€¦"
            class="flex-1 min-w-48 text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400">
     <select name="level" class="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400">
       <option value="">All Levels</option>
@@ -65,9 +65,9 @@
             <td class="px-4 py-3 font-semibold text-slate-800 max-w-xs">
               <a href="{% url 'resources:resource_detail' r.pk %}" class="hover:text-indigo-700">{{ r.title }}</a>
             </td>
-            <td class="px-4 py-3 text-xs text-slate-600">{{ r.author|default:"—" }}</td>
-            <td class="px-4 py-3 text-xs text-slate-500">{{ r.publisher|default:"—" }}</td>
-            <td class="px-4 py-3 text-xs text-slate-500">{{ r.publication_year|default:"—" }}</td>
+            <td class="px-4 py-3 text-xs text-slate-600">{{ r.author_display|default:"â€”" }}</td>
+            <td class="px-4 py-3 text-xs text-slate-500">{{ r.publisher|default:"â€”" }}</td>
+            <td class="px-4 py-3 text-xs text-slate-500">{{ r.publication_year|default:"â€”" }}</td>
             <td class="px-4 py-3">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">{{ r.level }}</span>
             </td>

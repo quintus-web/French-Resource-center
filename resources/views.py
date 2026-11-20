@@ -4,7 +4,7 @@ from .models import Resource, BookCopy
 
 
 def catalogue(request):
-    qs = Resource.objects.prefetch_related('copies')
+    qs = Resource.objects.select_related('publisher').prefetch_related('authors', 'copies')
 
     q = request.GET.get('q', '').strip()
     level = request.GET.get('level', '')
@@ -13,8 +13,9 @@ def catalogue(request):
     if q:
         qs = qs.filter(
             Q(title__icontains=q) |
-            Q(author__icontains=q) |
-            Q(publisher__icontains=q) |
+            Q(authors__first_name__icontains=q) |
+            Q(authors__last_name__icontains=q) |
+            Q(publisher__name__icontains=q) |
             Q(copies__accession_number__icontains=q)
         ).distinct()
     if level:

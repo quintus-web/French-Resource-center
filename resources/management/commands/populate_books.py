@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from resources.models import Resource, BookCopy
+from resources.models import Author, BookCopy, Publisher, Resource
 
 
 def get_category(title, series):
@@ -546,18 +546,33 @@ class Command(BaseCommand):
             category = get_category(title, series)
             level = get_level(series)
 
-            resource, _ = Resource.objects.get_or_create(
+            publisher_obj = None
+            if publisher:
+                publisher_obj, _ = Publisher.objects.get_or_create(name=publisher)
+
+            resource, resource_created = Resource.objects.get_or_create(
                 title=title,
-                author=author,
                 defaults={
-                    'publisher': publisher or '',
+                    'publisher': publisher_obj,
                     'publication_year': year,
                     'level': level,
                     'category': category,
                 }
             )
-            if _:
+            if resource_created:
                 created_resources += 1
+
+            # Legacy catalogue rows store multiple authors in one comma-separated field.
+            for author_name in (author or '').replace(' et ', ', ').split(','):
+                author_name = author_name.strip()
+                if not author_name:
+                    continue
+                parts = author_name.rsplit(' ', 1)
+                first_name, last_name = (parts if len(parts) == 2 else ('', parts[0]))
+                author_obj, _ = Author.objects.get_or_create(
+                    first_name=first_name, last_name=last_name
+                )
+                resource.authors.add(author_obj)
 
             notes = ''
             if accompany:

@@ -1,6 +1,6 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
-{% block title %}{{ resource.title }} — Catalogue{% endblock %}
+{% block title %}{{ resource.title }} â€” Catalogue{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -13,7 +13,7 @@
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
     <div>
       <h1 class="text-2xl font-extrabold text-slate-900">{{ resource.title }}</h1>
-      {% if resource.author %}<p class="text-sm text-slate-600 mt-1">{{ resource.author }}</p>{% endif %}
+      {% if resource.author_display %}<p class="text-sm text-slate-600 mt-1">{{ resource.author_display }}</p>{% endif %}
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
@@ -58,9 +58,9 @@
             {% for copy in resource.copies.all %}
             <tr class="hover:bg-slate-50">
               <td class="px-4 py-2.5 font-mono font-semibold text-slate-700">{{ copy.accession_number }}</td>
-              <td class="px-4 py-2.5 text-slate-600">{{ copy.shelf_location|default:"—" }}</td>
+              <td class="px-4 py-2.5 text-slate-600">{{ copy.shelf_location|default:"â€”" }}</td>
               <td class="px-4 py-2.5 text-slate-600">{{ copy.get_condition_display }}</td>
-              <td class="px-4 py-2.5 text-slate-500">{{ copy.notes|default:"—" }}</td>
+              <td class="px-4 py-2.5 text-slate-500">{{ copy.notes|default:"â€”" }}</td>
               <td class="px-4 py-2.5">
                 <span class="px-2 py-0.5 rounded-full font-semibold text-[10px]
                   {% if copy.status == 'AVAILABLE' %}bg-emerald-50 text-emerald-700
