@@ -19,7 +19,13 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 
 # Run migrations against Neon PostgreSQL
+if [[ -z "${DATABASE_URL:-}" ]]; then
+    echo "ERROR: DATABASE_URL is not set. Configure a persistent PostgreSQL database for the Render service."
+    exit 1
+fi
+
 python manage.py migrate
+python manage.py populate_books
 
 # Optional: Auto-create superuser if environment variables are set
 if [[ -n "$DJANGO_SUPERUSER_USERNAME" && -n "$DJANGO_SUPERUSER_PASSWORD" ]]; then
